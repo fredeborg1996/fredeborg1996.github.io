@@ -1,154 +1,551 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danish Baby Name Swiper</title>
+    <meta name="description" content="Professionel hjemmeside for en dansk virksomhed med ydelser, cases og kontaktinformation.">
+    <title>Din Virksomhed | Professionelle løsninger</title>
     <style>
+        :root {
+            color-scheme: light;
+            --bg: #f7f3ed;
+            --text: #17211f;
+            --muted: #65706c;
+            --brand: #0f5f57;
+            --brand-dark: #083c37;
+            --accent: #f2b84b;
+            --card: #ffffff;
+            --line: rgba(23, 33, 31, 0.12);
+            --shadow: 0 24px 60px rgba(8, 60, 55, 0.16);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            margin: 0;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.6;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .page-shell {
+            overflow: hidden;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(18px);
+            background: rgba(247, 243, 237, 0.86);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .nav,
+        .section,
+        .footer-content {
+            width: min(1120px, calc(100% - 40px));
+            margin: 0 auto;
+        }
+
+        .nav {
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 0;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            font-size: 1.1rem;
+        }
+
+        .logo-mark {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+            box-shadow: 0 12px 28px rgba(15, 95, 87, 0.24);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--brand);
+        }
+
+        .button {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
-        .card {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            width: 300px;
-            text-align: center;
-        }
-        .name {
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        .buttons {
-            display: flex;
-            justify-content: space-around;
-        }
-        button {
-            font-size: 18px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
+            gap: 8px;
+            min-height: 48px;
+            padding: 0 22px;
+            border-radius: 999px;
+            border: 0;
             cursor: pointer;
+            font-weight: 800;
+            background: var(--brand);
+            color: #fff;
+            box-shadow: 0 14px 32px rgba(15, 95, 87, 0.22);
         }
-        #dislike { background-color: #ff4d4d; }
-        #like { background-color: #4CAF50; }
-        #favorite { background-color: #ff9800; }
-        #shareCode, #loadCode {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
+
+        .button.secondary {
+            background: #fff;
+            color: var(--brand-dark);
+            border: 1px solid var(--line);
+            box-shadow: none;
         }
-        #loadButton {
-            width: 100%;
-            padding: 10px;
-            background-color: #008CBA;
-            color: white;
+
+        .hero {
+            position: relative;
+            padding: 88px 0 72px;
         }
-        #choices {
-            margin-top: 20px;
-            text-align: left;
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: -160px -20% auto auto;
+            width: 560px;
+            height: 560px;
+            border-radius: 50%;
+            background: rgba(242, 184, 75, 0.25);
+            filter: blur(6px);
+            z-index: -1;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+            gap: 56px;
+            align-items: center;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.68);
+            color: var(--brand-dark);
+            font-weight: 800;
+            font-size: 0.86rem;
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin-top: 0;
+        }
+
+        h1 {
+            margin-bottom: 22px;
+            font-size: clamp(2.7rem, 7vw, 5.8rem);
+            line-height: 0.94;
+            letter-spacing: -0.075em;
+        }
+
+        h2 {
+            font-size: clamp(2rem, 4vw, 3.4rem);
+            line-height: 1;
+            letter-spacing: -0.055em;
+            margin-bottom: 18px;
+        }
+
+        .hero-text {
+            max-width: 650px;
+            margin-bottom: 30px;
+            color: var(--muted);
+            font-size: 1.18rem;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 34px;
+        }
+
+        .trust-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            max-width: 640px;
+        }
+
+        .metric {
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .metric strong {
+            display: block;
+            font-size: 1.55rem;
+            letter-spacing: -0.04em;
+        }
+
+        .metric span {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .hero-card {
+            padding: 28px;
+            border-radius: 34px;
+            background: var(--card);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .hero-card-image {
+            min-height: 300px;
+            border-radius: 26px;
+            background:
+                linear-gradient(135deg, rgba(15, 95, 87, 0.86), rgba(8, 60, 55, 0.96)),
+                radial-gradient(circle at 20% 20%, rgba(242, 184, 75, 0.8), transparent 34%);
+            display: grid;
+            place-items: center;
+            color: #fff;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .hero-card-image strong {
+            display: block;
+            font-size: clamp(2rem, 4vw, 3.7rem);
+            line-height: 0.95;
+            letter-spacing: -0.07em;
+            margin-bottom: 16px;
+        }
+
+        .hero-card-footer {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 18px;
+            align-items: center;
+            padding-top: 22px;
+        }
+
+        .status-pill {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(15, 95, 87, 0.1);
+            color: var(--brand-dark);
+            font-weight: 800;
+            font-size: 0.84rem;
+        }
+
+        .section {
+            padding: 74px 0;
+        }
+
+        .section-heading {
+            max-width: 720px;
+            margin-bottom: 34px;
+        }
+
+        .section-heading p {
+            color: var(--muted);
+            font-size: 1.08rem;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            padding: 28px;
+            border-radius: 28px;
+            background: var(--card);
+            border: 1px solid var(--line);
+        }
+
+        .card-icon {
+            width: 52px;
+            height: 52px;
+            display: grid;
+            place-items: center;
+            border-radius: 18px;
+            background: rgba(242, 184, 75, 0.22);
+            color: var(--brand-dark);
+            font-size: 1.5rem;
+            margin-bottom: 22px;
+        }
+
+        .card h3 {
+            font-size: 1.35rem;
+            letter-spacing: -0.03em;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: var(--muted);
+            margin-bottom: 0;
+        }
+
+        .split {
+            display: grid;
+            grid-template-columns: 0.9fr 1.1fr;
+            gap: 42px;
+            align-items: center;
+        }
+
+        .panel {
+            padding: 34px;
+            border-radius: 34px;
+            background: var(--brand-dark);
+            color: #fff;
+            box-shadow: var(--shadow);
+        }
+
+        .panel p {
+            color: rgba(255, 255, 255, 0.74);
+        }
+
+        .steps {
+            display: grid;
+            gap: 16px;
+        }
+
+        .step {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 18px;
+            padding: 22px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid var(--line);
+        }
+
+        .step-number {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--brand);
+            color: #fff;
+            font-weight: 900;
+        }
+
+        .contact {
+            background: var(--brand-dark);
+            color: #fff;
+            border-radius: 40px;
+            padding: 44px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .contact p {
+            color: rgba(255, 255, 255, 0.74);
+            max-width: 680px;
+            margin-bottom: 0;
+        }
+
+        footer {
+            padding: 34px 0 44px;
+            color: var(--muted);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            border-top: 1px solid var(--line);
+            padding-top: 24px;
+        }
+
+        @media (max-width: 860px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero-grid,
+            .split,
+            .contact {
+                grid-template-columns: 1fr;
+            }
+
+            .cards,
+            .trust-row {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                padding-top: 58px;
+            }
+
+            .contact {
+                padding: 30px;
+                border-radius: 30px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="name" id="currentName"></div>
-        <div class="buttons">
-            <button id="dislike">👎</button>
-            <button id="favorite">❤️</button>
-            <button id="like">👍</button>
-        </div>
+    <div class="page-shell">
+        <header>
+            <nav class="nav" aria-label="Primær navigation">
+                <a class="logo" href="#top" aria-label="Din Virksomhed forside">
+                    <span class="logo-mark">DV</span>
+                    <span>Din Virksomhed</span>
+                </a>
+                <div class="nav-links">
+                    <a href="#ydelser">Ydelser</a>
+                    <a href="#proces">Proces</a>
+                    <a href="#kontakt">Kontakt</a>
+                </div>
+            </nav>
+        </header>
+
+        <main id="top">
+            <section class="hero section" aria-labelledby="hero-title">
+                <div class="hero-grid">
+                    <div>
+                        <p class="eyebrow">Dansk kvalitet · Hurtig opstart · Personlig service</p>
+                        <h1 id="hero-title">En moderne hjemmeside til din virksomhed.</h1>
+                        <p class="hero-text">Præsenter dine ydelser, skab tillid hos kunderne og gør det nemt at tage kontakt. Siden er bygget som et stærkt udgangspunkt, der kan tilpasses med virksomhedens navn, billeder og kontaktoplysninger.</p>
+                        <div class="hero-actions">
+                            <a class="button" href="#kontakt">Book en samtale</a>
+                            <a class="button secondary" href="#ydelser">Se ydelser</a>
+                        </div>
+                        <div class="trust-row" aria-label="Nøgletal">
+                            <div class="metric">
+                                <strong>24/7</strong>
+                                <span>Synlig online</span>
+                            </div>
+                            <div class="metric">
+                                <strong>100%</strong>
+                                <span>Mobilvenlig</span>
+                            </div>
+                            <div class="metric">
+                                <strong>3 trin</strong>
+                                <span>Fra idé til lancering</span>
+                            </div>
+                        </div>
+                    </div>
+                    <aside class="hero-card" aria-label="Fremhævet budskab">
+                        <div class="hero-card-image">
+                            <div>
+                                <strong>Gør første indtryk til dit bedste.</strong>
+                                <span>Professionel profil, tydelige ydelser og klar kontaktvej.</span>
+                            </div>
+                        </div>
+                        <div class="hero-card-footer">
+                            <div>
+                                <strong>Klar til lancering</strong><br>
+                                <span>Tilpas tekst og kontaktdata på få minutter.</span>
+                            </div>
+                            <span class="status-pill">Online</span>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="section" id="ydelser" aria-labelledby="services-title">
+                <div class="section-heading">
+                    <h2 id="services-title">Alt det vigtigste samlet ét sted.</h2>
+                    <p>Brug hjemmesiden til at forklare, hvorfor kunder skal vælge netop din virksomhed.</p>
+                </div>
+                <div class="cards">
+                    <article class="card">
+                        <div class="card-icon">⚙️</div>
+                        <h3>Ydelser</h3>
+                        <p>Beskriv dine kerneydelser med korte, konkrete forklaringer, som kunderne hurtigt kan forstå.</p>
+                    </article>
+                    <article class="card">
+                        <div class="card-icon">🤝</div>
+                        <h3>Troværdighed</h3>
+                        <p>Vis erfaring, kvalitet og arbejdsmetode, så nye kunder føler sig trygge ved at kontakte dig.</p>
+                    </article>
+                    <article class="card">
+                        <div class="card-icon">📞</div>
+                        <h3>Kontakt</h3>
+                        <p>Gør næste skridt enkelt med tydelige call-to-actions, telefon, mail og en kort kontaktsektion.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section split" id="proces" aria-labelledby="process-title">
+                <div class="panel">
+                    <h2 id="process-title">Fra lokal idé til professionel online profil.</h2>
+                    <p>Hjemmesiden er designet til små og mellemstore virksomheder, der vil virke professionelle uden at gøre det kompliceret.</p>
+                    <a class="button" href="#kontakt">Kom i gang</a>
+                </div>
+                <div class="steps">
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <div>
+                            <h3>Tilpas indhold</h3>
+                            <p>Udskift virksomhedsnavn, ydelser, tekst og kontaktoplysninger med dine egne data.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <div>
+                            <h3>Vis din værdi</h3>
+                            <p>Fremhæv det, der gør din virksomhed særlig: kvalitet, hurtig respons eller personlig service.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <div>
+                            <h3>Del siden</h3>
+                            <p>Kør siden lokalt, læg den online på GitHub Pages og del linket med kunder.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="kontakt" aria-labelledby="contact-title">
+                <div class="contact">
+                    <div>
+                        <h2 id="contact-title">Lad os tage næste skridt.</h2>
+                        <p>Kontakt os for et uforpligtende tilbud, eller brug denne sektion til din egen telefon, mail og adresse.</p>
+                    </div>
+                    <a class="button" href="mailto:kontakt@dinvirksomhed.dk">kontakt@dinvirksomhed.dk</a>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <span>© 2026 Din Virksomhed. Alle rettigheder forbeholdes.</span>
+                <span>CVR · Telefon · Adresse</span>
+            </div>
+        </footer>
     </div>
-    <input type="text" id="shareCode" readonly placeholder="Your share code will appear here">
-    <input type="text" id="loadCode" placeholder="Enter share code">
-    <button id="loadButton">Load Shared Names</button>
-    <div id="choices"></div>
-
-    <script>
-        const danishBabyNames = [
-            'Freja', 'Oscar', 'Alma', 'William', 'Clara', 'Noah', 'Ella', 'Alfred',
-            'Sofia', 'Carl', 'Ida', 'Emil', 'Anna', 'Oliver', 'Isabella', 'August',
-            'Laura', 'Valdemar', 'Karla', 'Aksel', 'Nora', 'Magnus', 'Liva', 'Elias'
-        ];
-
-        let currentNames = [];
-        let currentIndex = 0;
-        let choices = {};
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
-
-        function initializeNames() {
-            currentNames = [...danishBabyNames];
-            shuffleArray(currentNames);
-            currentIndex = 0;
-            choices = {};
-            updateShareCode();
-            showCurrentName();
-            updateChoices();
-        }
-
-        function showCurrentName() {
-            document.getElementById('currentName').textContent = currentNames[currentIndex];
-        }
-
-        function updateShareCode() {
-            const shareCode = btoa(JSON.stringify(currentNames));
-            document.getElementById('shareCode').value = shareCode;
-        }
-
-        function handleChoice(choice) {
-            choices[currentNames[currentIndex]] = choice;
-            currentIndex = (currentIndex + 1) % currentNames.length;
-            showCurrentName();
-            updateChoices();
-        }
-
-        function updateChoices() {
-            const choicesDiv = document.getElementById('choices');
-            choicesDiv.innerHTML = '<h3>Your Choices:</h3>';
-            for (const [name, choice] of Object.entries(choices)) {
-                const emoji = choice === 'like' ? '👍' : choice === 'dislike' ? '👎' : '❤️';
-                choicesDiv.innerHTML += `<div>${name}: ${emoji}</div>`;
-            }
-        }
-
-        document.getElementById('dislike').addEventListener('click', () => handleChoice('dislike'));
-        document.getElementById('like').addEventListener('click', () => handleChoice('like'));
-        document.getElementById('favorite').addEventListener('click', () => handleChoice('favorite'));
-
-        document.getElementById('loadButton').addEventListener('click', () => {
-            const loadCode = document.getElementById('loadCode').value;
-            try {
-                const loadedNames = JSON.parse(atob(loadCode));
-                if (Array.isArray(loadedNames) && loadedNames.every(name => typeof name === 'string')) {
-                    currentNames = loadedNames;
-                    currentIndex = 0;
-                    choices = {};
-                    showCurrentName();
-                    updateChoices();
-                    alert('Shared names loaded successfully!');
-                } else {
-                    throw new Error('Invalid shared code');
-                }
-            } catch (error) {
-                alert('Invalid shared code. Please try again.');
-            }
-        });
-
-        initializeNames();
-    </script>
 </body>
 </html>
