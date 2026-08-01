@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#e9a75c">
+<title>Crowd Clash</title>
+<style>
+  :root{color-scheme:dark}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e9a75c;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
+  canvas{display:block;width:100vw;height:100vh}
+  #hud{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 2px 4px #0009;font-weight:900}
+  .top{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:12px;right:12px;display:flex;justify-content:space-between;align-items:center}
+  .badge{background:#171717bb;border:2px solid #ffffff55;border-radius:18px;padding:8px 12px;min-width:76px;text-align:center}
+  #level{position:absolute;top:calc(env(safe-area-inset-top) + 12px);left:50%;transform:translateX(-50%);font-size:23px;white-space:nowrap}
+  #progressWrap{position:absolute;top:calc(env(safe-area-inset-top) + 48px);left:18%;right:18%;height:13px;border-radius:10px;background:#1b1b1bbb;border:2px solid #ffffff55;overflow:hidden}
+  #progress{height:100%;width:0;background:#63df52}
+  #message{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:min(90vw,430px);text-align:center;font-size:38px;line-height:1.05}
+  #message small{display:block;font-size:17px;margin-top:12px}
+  #restart{display:none;pointer-events:auto;margin:20px auto 0;border:0;border-radius:18px;padding:14px 24px;background:white;color:#222;font-weight:900;font-size:20px;box-shadow:0 7px 20px #0005}
+  #hint{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 18px);left:50%;transform:translateX(-50%);background:#111b;border:2px solid #ffffff44;border-radius:18px;padding:10px 16px;font-size:15px;white-space:nowrap}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div class="top">
+    <div class="badge">💎 <span id="gems">0</span></div>
+    <div class="badge">👥 <span id="count">12</span></div>
+  </div>
+  <div id="level">LEVEL 1</div>
+  <div id="progressWrap"><div id="progress"></div></div>
+  <div id="message">
+    <div id="messageText">TRÆK FOR AT FLYTTE</div>
+    <small id="messageSub">Vælg de bedste porte og slå fjenderne.</small>
+    <button id="restart">Spil igen</button>
+  </div>
+  <div id="hint">Træk til venstre og højre</div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const countEl = document.getElementById('count');
+  const gemsEl = document.getElementById('gems');
+  const progressEl = document.getElementById('progress');
+  const levelEl = document.getElementById('level');
+  const message = document.getElementById('message');
+  const messageText = document.getElementById('messageText');
+  const messageSub = document.getElementById('messageSub');
+  const restartBtn = document.getElementById('restart');
+  const hint = document.getElementById('hint');
+
+  let W=0,H=0,DPR=1;
+  let last=0, running=false, ended=false;
+  let playerX=0, targetX=0, worldY=0, speed=165;
+  let crowd=12, gems=0, level=1;
+  let particles=[], objects=[];
+  let trackLeft=0,trackRight=0,trackWidth=0;
+  let finishY=3600;
+  let dragging=false;
+
+  function resize(){
+    DPR=Math.min(devicePixelRatio||1,2);
+    W=innerWidth; H=innerHeight;
+    canvas.width=W*DPR; canvas.height=H*DPR;
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    trackWidth=Math.min(W*0.72,420);
+    trackLeft=(W-trackWidth)/2;
+    trackRight=trackLeft+trackWidth;
+    if(!playerX){playerX=W/2;targetX=W/2;}
+  }
+  addEventListener('resize',resize); resize();
+
+  function rnd(a,b){return a+Math.random()*(b-a)}
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+  function screenY(y){return H-(y-worldY)+50}
+
+  function reset(){
+    crowd=12; gems=0; level=1; worldY=0; speed=165; ended=false; running=false;
+    playerX=targetX=W/2;
+    particles=[]; objects=[];
+    finishY=3800;
+    generateLevel();
+    updateHUD();
+    levelEl.textContent='LEVEL 1';
+    message.style.display='block';
+    messageText.textContent='TRÆK FOR AT FLYTTE';
+    messageSub.textContent='Vælg de bedste porte og slå fjenderne.';
+    restartBtn.style.display='none';
+    hint.style.display='block';
+  }
+
+  function generateLevel(){
+    const xs=[trackLeft+trackWidth*0.28,trackLeft+trackWidth*0.72];
+    let y=500;
+    const rows=[
+      [{type:'add',value:8},{type:'mult',value:2}],
+      [{type:'enemy',value:22}],
+      [{type:'add',value:14},{type:'add',value:6}],
+      [{type:'enemy',value:34}],
+      [{type:'mult',value:2},{type:'add',value:18}],
+      [{type:'enemy',value:58}],
+      [{type:'add',value:25},{type:'mult',value:2}],
+      [{type:'enemy',value:95}],
+      [{type:'add',value:40},{type:'mult',value:3}],
+      [{type:'enemy',value:150}],
+    ];
+    rows.forEach((row)=>{
+      if(row.length===1){
+        objects.push({x:W/2,y,type:row[0].type,value:row[0].value,done:false});
+      }else{
+        row.forEach((o,j)=>objects.push({x:xs[j],y,type:o.type,value:o.value,done:false,lane:j}));
+      }
+      y+=310;
+    });
+    objects.push({x:W/2,y:finishY,type:'finish',value:0,done:false});
+  }
+
+  function updateHUD(){
+    countEl.textContent=Math.max(0,Math.floor(crowd));
+    gemsEl.textContent=gems;
+    progressEl.style.width=Math.min(100,(worldY/finishY)*100)+'%';
+  }
+
+  function start(){
+    if(ended)return;
+    running=true;
+    message.style.display='none';
+    hint.style.display='none';
+  }
+
+  function pointerX(e){return e.touches?e.touches[0].clientX:e.clientX}
+  function down(e){dragging=true;targetX=pointerX(e);start()}
+  function move(e){if(dragging){e.preventDefault();targetX=pointerX(e)}}
+  function up(){dragging=false}
+  canvas.addEventListener('pointerdown',down);
+  canvas.addEventListener('pointermove',move);
+  addEventListener('pointerup',up);
+  canvas.addEventListener('touchstart',down,{passive:false});
+  canvas.addEventListener('touchmove',move,{passive:false});
+  addEventListener('touchend',up);
+
+  restartBtn.onclick=reset;
+
+  function burst(x,y,color,n=18){
+    for(let i=0;i<n;i++) particles.push({
+      x,y,vx:rnd(-90,90),vy:rnd(-130,10),life:rnd(.35,.8),r:rnd(2,5),color
+    });
+  }
+
+  function collide(obj){
+    if(obj.done)return;
+    const sy=screenY(obj.y);
+    const px=playerX;
+    if(Math.abs(sy-(H-150))<42 && Math.abs(px-obj.x)<trackWidth*0.26){
+      obj.done=true;
+      if(obj.type==='add'){
+        crowd+=obj.value; gems+=2; burst(obj.x,sy,'#54c9ff',22);
+      }else if(obj.type==='mult'){
+        crowd*=obj.value; gems+=4; burst(obj.x,sy,'#b566ff',28);
+      }else if(obj.type==='enemy'){
+        if(crowd>obj.value){
+          crowd-=obj.value;
+          gems+=Math.ceil(obj.value/8);
+          burst(obj.x,sy,'#ff4d43',35);
+        }else{
+          crowd=0; burst(obj.x,sy,'#ff4d43',45); lose();
+        }
+      }else if(obj.type==='finish'){
+        win();
+      }
+      updateHUD();
+    }
+  }
+
+  function win(){
+    ended=true; running=false;
+    message.style.display='block';
+    messageText.textContent='DU VANDT!';
+    messageSub.textContent='Slutstyrke: '+Math.floor(crowd)+' personer';
+    restartBtn.style.display='block';
+  }
+  function lose(){
+    ended=true; running=false;
+    message.style.display='block';
+    messageText.textContent='TABT';
+    messageSub.textContent='Du manglede flere folk.';
+    restartBtn.style.display='block';
+  }
+
+  function update(dt){
+    if(running && !ended){
+      worldY+=speed*dt;
+      playerX += (targetX-playerX)*Math.min(1,dt*9);
+      playerX=clamp(playerX,trackLeft+34,trackRight-34);
+      speed=Math.min(250,speed+dt*2.5);
+      objects.forEach(collide);
+      updateHUD();
+    }
+    particles.forEach(p=>{p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=240*dt});
+    particles=particles.filter(p=>p.life>0);
+  }
+
+  function roundRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
+
+  function drawBackground(){
+    ctx.fillStyle='#efb66d';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#d99b54';
+    for(let i=0;i<24;i++){
+      const x=(i*97+worldY*.08)%W;
+      const y=(i*131-worldY*.25)%H;
+      ctx.beginPath();ctx.arc(x,y<0?y+H:y,3+(i%4),0,Math.PI*2);ctx.fill();
+    }
+    ctx.fillStyle='#d8d1c8';roundRect(trackLeft-10,0,trackWidth+20,H,28);ctx.fill();
+    ctx.fillStyle='#817d79';roundRect(trackLeft,0,trackWidth,H,24);ctx.fill();
+    const grad=ctx.createLinearGradient(trackLeft,0,trackRight,0);
+    grad.addColorStop(0,'#8d8986');grad.addColorStop(.5,'#a19c98');grad.addColorStop(1,'#85817d');
+    ctx.fillStyle=grad;roundRect(trackLeft+8,0,trackWidth-16,H,20);ctx.fill();
+  }
+
+  function drawGate(o){
+    const sy=screenY(o.y);
+    if(sy<-100||sy>H+100||o.done)return;
+    const w=trackWidth*.34,h=66;
+    const x=o.x-w/2,y=sy-h/2;
+    ctx.save();
+    ctx.shadowColor='#0005';ctx.shadowBlur=10;ctx.shadowOffsetY=5;
+    ctx.fillStyle=o.type==='add'?'#2ea9ea':'#8c35d8';roundRect(x,y,w,h,9);ctx.fill();
+    ctx.shadowColor='transparent';ctx.fillStyle='#ffffff22';ctx.fillRect(x+8,y+8,w-16,10);
+    ctx.fillStyle='white';ctx.strokeStyle='#222';ctx.lineWidth=4;
+    ctx.font='900 27px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    const text=o.type==='add'?'+'+o.value:'x'+o.value;
+    ctx.strokeText(text,o.x,sy);ctx.fillText(text,o.x,sy);ctx.restore();
+  }
+
+  function drawEnemy(o){
+    const sy=screenY(o.y);
+    if(sy<-120||sy>H+130||o.done)return;
+    const r=36+Math.min(24,o.value/5);
+    ctx.save();ctx.fillStyle='#d9322c';
+    for(let i=0;i<Math.min(45,8+Math.floor(o.value/4));i++){
+      const a=i*2.399, rr=Math.sqrt(i)*5.2;
+      ctx.beginPath();ctx.arc(o.x+Math.cos(a)*rr,sy+Math.sin(a)*rr,7,0,Math.PI*2);ctx.fill();
+    }
+    ctx.fillStyle='#ffd52f';ctx.beginPath();ctx.arc(o.x,sy-r*.25,r*.48,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#2b1515';ctx.font='900 14px system-ui';ctx.textAlign='center';ctx.fillText('BOSS',o.x,sy-r*.22+5);
+    ctx.fillStyle='#d8221b';ctx.strokeStyle='#fff';ctx.lineWidth=3;roundRect(o.x-40,sy-r-33,80,34,10);ctx.fill();ctx.stroke();
+    ctx.fillStyle='white';ctx.strokeStyle='#222';ctx.lineWidth=3;ctx.font='900 18px system-ui';ctx.strokeText(o.value,o.x,sy-r-16);ctx.fillText(o.value,o.x,sy-r-16);ctx.restore();
+  }
+
+  function drawFinish(o){
+    const sy=screenY(o.y);
+    if(sy<-80||sy>H+80||o.done)return;
+    const size=22;
+    for(let i=0;i<Math.ceil(trackWidth/size);i++){
+      ctx.fillStyle=i%2?'#111':'#fff';ctx.fillRect(trackLeft+i*size,sy,size,22);
+      ctx.fillStyle=i%2?'#fff':'#111';ctx.fillRect(trackLeft+i*size,sy+22,size,22);
+    }
+  }
+
+  function drawCrowd(){
+    const baseY=H-150;
+    const n=Math.min(90,Math.max(1,Math.floor(crowd)));
+    for(let i=n-1;i>=0;i--){
+      const row=Math.floor(Math.sqrt(i));
+      const angle=i*2.399;
+      const spread=Math.min(trackWidth*.25,10+Math.sqrt(i)*9);
+      const x=playerX+Math.cos(angle)*spread;
+      const y=baseY+Math.sin(angle)*spread*.5+row*.3;
+      ctx.fillStyle='#4fc3ff';ctx.beginPath();ctx.arc(x,y-7,5.5,0,Math.PI*2);ctx.fill();ctx.fillRect(x-3.5,y-2,7,11);
+      ctx.fillStyle='#a8e6ff';ctx.beginPath();ctx.arc(x-1.5,y-9,1.4,0,Math.PI*2);ctx.fill();
+    }
+    ctx.save();ctx.globalAlpha=.25;ctx.fillStyle='#47c7ff';ctx.beginPath();ctx.arc(playerX,baseY,55,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+
+  function drawParticles(){
+    particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life*1.7);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()});
+    ctx.globalAlpha=1;
+  }
+
+  function draw(){
+    drawBackground();
+    [...objects].sort((a,b)=>b.y-a.y).forEach(o=>{
+      if(o.type==='add'||o.type==='mult')drawGate(o);
+      else if(o.type==='enemy')drawEnemy(o);
+      else if(o.type==='finish')drawFinish(o);
+    });
+    drawCrowd();drawParticles();
+  }
+
+  function loop(t){
+    const dt=Math.min(.033,(t-last)/1000||0);last=t;
+    update(dt);draw();requestAnimationFrame(loop);
+  }
+  reset();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
